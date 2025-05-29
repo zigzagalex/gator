@@ -6,20 +6,20 @@ import (
 	"os"
 )
 
-func Read() (Config, error) {
+func Read() (*Config, error) {
 	var conf Config
 
 	configPath, _ := getConfigFilePath()
 
 	fileBytes, err := os.ReadFile(configPath)
 	if err != nil {
-		return conf, fmt.Errorf("Failed to read config file: %w", err)
+		return &conf, fmt.Errorf("Failed to read config file: %w", err)
 	}
 
 	err = json.Unmarshal(fileBytes, &conf)
 	if err != nil {
-		return conf, fmt.Errorf("Failed to unmarshal config JSON: %w", err)
+		return &conf, fmt.Errorf("Failed to unmarshal config JSON: %w", err)
 	}
 
-	return conf, nil
+	return &conf, nil
 }

@@ -32,3 +32,21 @@ func PrettyPrintFeeds(feeds []database.GetFeedsRow) {
 
 	w.Flush()
 }
+
+func PrettyPrintFollows(follows []database.GetFeedFollowsForUserRow) {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+
+	// Headers
+	fmt.Fprintln(w, "Created At\tFeed Name\tUser Name")
+
+	// Rows
+	for _, f := range follows {
+		fmt.Fprintf(w, "%v\t%v\t%v\n",
+			f.CreatedAt.Format(time.RFC3339),
+			f.FeedName.String,
+			f.UserName.String,
+		)
+	}
+
+	w.Flush()
+}

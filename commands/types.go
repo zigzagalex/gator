@@ -1,8 +1,12 @@
 package commands
 
-import "github.com/zigzagalex/gator/internal/config"
+import (
+	"github.com/zigzagalex/gator/internal/config"
+	"github.com/zigzagalex/gator/internal/database"
+)
 
 type State struct {
+	DB      *database.Queries
 	Pointer *config.Config
 }
 

@@ -1,0 +1,39 @@
+package commands
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/zigzagalex/gator/internal/database"
+)
+
+func HandlerAddFeed(s *State, cmd Command) error {
+	currentUserName := s.Pointer.CurrentUserName
+	user, _ := s.DB.GetUser(context.Background(), currentUserName)
+
+	feedName := cmd.Args[0]
+	feedUrl := cmd.Args[1]
+
+	createFeedParams := database.CreateFeedParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name:      feedName,
+		Url:       feedUrl,
+		UserID:    user.ID,
+	}
+
+	feed, err := s.DB.CreateFeed(context.Background(), createFeedParams)
+	if err != nil {
+		fmt.Println("Feed could not be added")
+		os.Exit(1)
+		return nil
+	}
+
+	fmt.Print(feed)
+
+	return nil
+}

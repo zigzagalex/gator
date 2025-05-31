@@ -1,18 +1,36 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 	"os"
 
+	_ "github.com/lib/pq"
 	"github.com/zigzagalex/gator/commands"
 	"github.com/zigzagalex/gator/internal/config"
+	"github.com/zigzagalex/gator/internal/database"
 )
 
 func main() {
 	conf, _ := config.Read()
-	conf.DBURL = "postgres://example"
 
-	state := &commands.State{Pointer: conf}
+	db, err := sql.Open("postgres", conf.DBURL)
+	if err != nil {
+		log.Fatalf("Failed to connect to db: %v", err)
+	}
+	defer db.Close()
+
+	if err := db.Ping(); err != nil {
+		log.Fatalf("DB ping failed: %v", err)
+	}
+
+	dbQueries := database.New(db)
+
+	state := &commands.State{
+		DB:      dbQueries,
+		Pointer: conf,
+	}
 
 	cmdRegistry, _ := commands.InitCommands()
 
@@ -28,9 +46,9 @@ func main() {
 		Args: commandArgs,
 	}
 
-	err := cmdRegistry.Run(state, cmd)
-	if err != nil {
-		fmt.Println("Error:", err)
+	err1 := cmdRegistry.Run(state, cmd)
+	if err1 != nil {
+		fmt.Println("Error:", err1)
 		os.Exit(1)
 	}
 

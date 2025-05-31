@@ -27,5 +27,6 @@ func InitCommands() (Commands, error) {
 	cmdRegistry.CommandRegister("users", HandlerUsers)
 	cmdRegistry.CommandRegister("agg", HandlerAgg)
 	cmdRegistry.CommandRegister("addfeed", HandlerAddFeed)
+	cmdRegistry.CommandRegister("feeds", HandlerFeeds)
 	return cmdRegistry, nil
 }

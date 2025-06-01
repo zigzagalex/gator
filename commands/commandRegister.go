@@ -26,9 +26,9 @@ func InitCommands() (Commands, error) {
 	cmdRegistry.CommandRegister("reset", HandlerReset)
 	cmdRegistry.CommandRegister("users", HandlerUsers)
 	cmdRegistry.CommandRegister("agg", HandlerAgg)
-	cmdRegistry.CommandRegister("addfeed", HandlerAddFeed)
+	cmdRegistry.CommandRegister("addfeed", middlewareLoggedIn(HandlerAddFeed))
 	cmdRegistry.CommandRegister("feeds", HandlerFeeds)
-	cmdRegistry.CommandRegister("follow", HandlerFollow)
+	cmdRegistry.CommandRegister("follow", middlewareLoggedIn(HandlerFollow))
 	cmdRegistry.CommandRegister("following", HandlerFollowing)
 
 	return cmdRegistry, nil

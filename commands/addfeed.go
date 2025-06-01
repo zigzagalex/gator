@@ -10,9 +10,7 @@ import (
 	"github.com/zigzagalex/gator/internal/database"
 )
 
-func HandlerAddFeed(s *State, cmd Command) error {
-	currentUserName := s.Pointer.CurrentUserName
-	user, _ := s.DB.GetUser(context.Background(), currentUserName)
+func HandlerAddFeed(s *State, cmd Command, user database.User) error {
 
 	feedName := cmd.Args[0]
 	feedUrl := cmd.Args[1]

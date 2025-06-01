@@ -10,7 +10,7 @@ import (
 	"github.com/zigzagalex/gator/internal/database"
 )
 
-func HandlerFollow(s *State, cmd Command) error {
+func HandlerFollow(s *State, cmd Command, user database.User) error {
 	url := cmd.Args[0]
 
 	// Get feed
@@ -20,15 +20,7 @@ func HandlerFollow(s *State, cmd Command) error {
 		os.Exit(1)
 		return nil
 	}
-
-	// Get current user
-	user, err := s.DB.GetUser(context.Background(), s.Pointer.CurrentUserName)
-	if err != nil {
-		fmt.Println("Error getting user info")
-		os.Exit(1)
-		return nil
-	}
-
+	
 	followParams := database.CreateFeedFollowParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now(),

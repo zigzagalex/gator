@@ -39,10 +39,9 @@ func HandlerAddFeed(s *State, cmd Command, user database.User) error {
 		FeedID:    feed.ID,
 	}
 
-	follow, err := s.DB.CreateFeedFollow(context.Background(), followParams)
+	_, err = s.DB.CreateFeedFollow(context.Background(), followParams)
 
-	fmt.Print(feed)
-	fmt.Print(follow)
+	fmt.Printf("Feed added and followed: %v", feed.Name)
 
 	return nil
 }

@@ -1,18 +1,23 @@
 package commands
 
 import (
-	"context"
 	"fmt"
+	"time"
 
 	"github.com/zigzagalex/gator/rss"
 )
 
 func HandlerAgg(s *State, cmd Command) error {
-	url := "https://www.wagslane.dev/index.xml"
-	_, err := rss.FetchFeed(context.Background(), url)
+	time_between_reqs, err := time.ParseDuration(cmd.Args[0])
 	if err != nil {
-		fmt.Println("Error fetching the rss Feed.")
+		return fmt.Errorf("Parse duration error: %v", err)
 	}
 
-	return nil
+	fmt.Printf("Collecting feeds every %v", time_between_reqs)
+
+	ticker := time.NewTicker(time_between_reqs)
+	for ; ; <-ticker.C {
+		rss.ScrapeFeeds(s.DB)
+	}
+
 }

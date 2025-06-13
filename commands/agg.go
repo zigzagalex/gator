@@ -17,7 +17,10 @@ func HandlerAgg(s *State, cmd Command) error {
 
 	ticker := time.NewTicker(time_between_reqs)
 	for ; ; <-ticker.C {
-		rss.ScrapeFeeds(s.DB)
+		err = rss.ScrapeFeeds(s.DB)
+		if err != nil {
+			fmt.Printf("Scrape error: %v\n", err)
+		}
 	}
 
 }

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html"
 	"io"
-	"log"
 	"net/http"
 )
 
@@ -36,7 +35,7 @@ func FetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 
 	var feed RSSFeed
 	if err := xml.Unmarshal(body, &feed); err != nil {
-		return nil, fmt.Errorf("unmarshaling XML failed: %w", err)
+		return nil, fmt.Errorf("Unmarshaling XML failed: %w", err)
 	}
 
 	feed.Channel.Title = html.UnescapeString(feed.Channel.Title)
@@ -47,8 +46,6 @@ func FetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 		item.Title = html.UnescapeString(item.Title)
 		item.Description = html.UnescapeString(item.Description)
 	}
-
-	log.Print(feed)
 
 	return &feed, nil
 }

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"github.com/zigzagalex/gator/internal/database"
 )
 
@@ -29,7 +30,7 @@ func ScrapeFeeds(db *database.Queries) error {
 
 	for _, item := range parsedFeed.Channel.Item {
 		// Declaring layout constant
-		const layout = "2006-Jan-02"
+		const layout = time.RFC1123Z
 		pub_date, err := time.Parse(layout, item.PubDate)
 		if err != nil {
 			return fmt.Errorf("Error parsing post pub date: %v", err)
@@ -49,9 +50,16 @@ func ScrapeFeeds(db *database.Queries) error {
 			FeedID:      feed.ID,
 		}
 
-		post, err := db.CreatePost(context.Background(), post_param)
+		post, err := db.CreatePost(ctx, post_param)
 		if err != nil {
-			fmt.Printf("Error creating post: %v", err)
+			// Check for "duplicate key" error (PostgreSQL code 23505)
+			if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
+				// Duplicate URL – skip silently
+				continue
+			}
+			// Other errors
+			fmt.Printf("Error creating post (%s): %v\n", item.Link, err)
+			continue
 		}
 		fmt.Printf("%v\n", post.Title)
 	}

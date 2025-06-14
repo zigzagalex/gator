@@ -29,7 +29,7 @@ func HandlerBrowse(s *State, cmd Command, user database.User) error {
 		if i >= n_posts {
 			break
 		}
-		fmt.Printf("* %s | %s\n", post.PublishedAt.Format("2006-01-02"), post.Title)
+		fmt.Printf("* %s | %s\n  ↳ %s\n", post.PublishedAt.Format("2006-01-02"), post.Title, post.Url)
 	}
 	return nil
 

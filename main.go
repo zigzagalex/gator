@@ -91,7 +91,7 @@ func main() {
 
 		line.AppendHistory(input)
 
-		if input == "exit" || input == "quit" {
+		if input == "exit" {
 			fmt.Println("Goodbye.")
 			break
 		}

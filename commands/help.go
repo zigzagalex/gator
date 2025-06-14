@@ -24,10 +24,8 @@ func HandlerHelp(cmdRegistry *Commands) func(*State, Command) error {
 			if cmd.Usage != "" {
 				fmt.Printf("  usage: %s\n", cmd.Usage)
 			}
-			fmt.Println()
 		}
-
-		fmt.Println("Type 'exit' or 'quit' to leave.")
+		fmt.Println("Type 'exit' to leave.")
 		return nil
 	}
 }

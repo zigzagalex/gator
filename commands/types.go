@@ -15,6 +15,12 @@ type Command struct {
 	Args []string
 }
 
+type CommandHandler struct {
+	Description string
+	Usage       string
+	Handler     func(*State, Command) error
+}
+
 type Commands struct {
-	Handlers map[string]func(*State, Command) error
+	Handlers map[string]CommandHandler
 }

@@ -4,35 +4,40 @@ import "fmt"
 
 func (c *Commands) Run(s *State, cmd Command) error {
 	if handler, ok := c.Handlers[cmd.Name]; ok {
-		return handler(s, cmd)
+		return handler.Handler(s, cmd)
+
 	}
 	return fmt.Errorf("Unknown command: %s", cmd.Name)
 }
 
-func (c *Commands) CommandRegister(name string, f func(*State, Command) error) {
+func (c *Commands) CommandRegister(name, description, usage string, handler func(*State, Command) error) {
 	if c.Handlers == nil {
-		c.Handlers = make(map[string]func(*State, Command) error)
+		c.Handlers = make(map[string]CommandHandler)
 	}
-	c.Handlers[name] = f
+	c.Handlers[name] = CommandHandler{
+		Description: description,
+		Usage:       usage,
+		Handler:     handler,
+	}
 }
 
 func InitCommands() (Commands, error) {
 	cmdRegistry := Commands{
-		Handlers: make(map[string]func(*State, Command) error),
+		Handlers: make(map[string]CommandHandler),
 	}
 
-	cmdRegistry.CommandRegister("login", HandlerLogin)
-	cmdRegistry.CommandRegister("register", HandlerRegister)
-	cmdRegistry.CommandRegister("reset", HandlerReset)
-	cmdRegistry.CommandRegister("users", HandlerUsers)
-	cmdRegistry.CommandRegister("agg", HandlerAgg)
-	cmdRegistry.CommandRegister("addfeed", middlewareLoggedIn(HandlerAddFeed))
-	cmdRegistry.CommandRegister("feeds", HandlerFeeds)
-	cmdRegistry.CommandRegister("follow", middlewareLoggedIn(HandlerFollow))
-	cmdRegistry.CommandRegister("following", HandlerFollowing)
-	cmdRegistry.CommandRegister("unfollow", middlewareLoggedIn(HandlerUnfollow))
-	cmdRegistry.CommandRegister("b", middlewareLoggedIn(HandlerBrowse))
-	cmdRegistry.CommandRegister("help", HandlerHelp(&cmdRegistry))
+	cmdRegistry.CommandRegister("login", "Login as user", "login <username>", HandlerLogin)
+	cmdRegistry.CommandRegister("register", "Register new user", "register <username>", HandlerRegister)
+	cmdRegistry.CommandRegister("reset", "Reset databases, DEV only.", "reset", HandlerReset)
+	cmdRegistry.CommandRegister("users", "List all users", "users", HandlerUsers)
+	cmdRegistry.CommandRegister("agg", "Fetch and aggregate feeds", "agg <int><unit>", HandlerAgg)
+	cmdRegistry.CommandRegister("addfeed", "Add RSS feed", "addfeed <feed_name> <url>", middlewareLoggedIn(HandlerAddFeed))
+	cmdRegistry.CommandRegister("feeds", "List all feeds", "feeds", HandlerFeeds)
+	cmdRegistry.CommandRegister("follow", "Follow a feed", "follow <feed_url>", middlewareLoggedIn(HandlerFollow))
+	cmdRegistry.CommandRegister("following", "Show followed feeds by current user", "following", HandlerFollowing)
+	cmdRegistry.CommandRegister("unfollow", "Unfollow a feed", "unfollow <feed_url>", middlewareLoggedIn(HandlerUnfollow))
+	cmdRegistry.CommandRegister("b", "Browse posts", "b <int>", middlewareLoggedIn(HandlerBrowse))
+	cmdRegistry.CommandRegister("help", "Show available commands", "help", HandlerHelp(&cmdRegistry))
 
 	return cmdRegistry, nil
 }

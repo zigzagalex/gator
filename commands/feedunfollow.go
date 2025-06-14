@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/zigzagalex/gator/internal/database"
 )
@@ -14,9 +13,7 @@ func HandlerUnfollow(s *State, cmd Command, user database.User) error {
 	// Get feed
 	feed, err := s.DB.GetFeed(context.Background(), url)
 	if err != nil {
-		fmt.Println("Error getting feed info")
-		os.Exit(1)
-		return nil
+		return fmt.Errorf("Error getting feed info: %v", err)
 	}
 
 	params := database.DeleteFeedFollowParams{

@@ -15,14 +15,14 @@ func HandlerBrowse(s *State, cmd Command, user database.User) error {
 	if len(cmd.Args) > 0 && strings.TrimSpace(cmd.Args[0]) != "" {
 		num, err := strconv.Atoi(strings.TrimSpace(cmd.Args[0]))
 		if err != nil {
-			return fmt.Errorf("invalid number of posts: %w", err)
+			return fmt.Errorf("Invalid number of posts: %w", err)
 		}
 		n_posts = num
 	}
 
 	posts, err := s.DB.GetPosts(context.Background(), user.ID)
 	if err != nil {
-		fmt.Printf("Error getting posts for %v: %v", user.Name, err)
+		return fmt.Errorf("Error getting posts for %v: %v", user.Name, err)
 	}
 
 	for i, post := range posts {

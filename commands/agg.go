@@ -10,7 +10,7 @@ import (
 func HandlerAgg(s *State, cmd Command) error {
 	time_between_reqs, err := time.ParseDuration(cmd.Args[0])
 	if err != nil {
-		return fmt.Errorf("Parse duration error: %v", err)
+		return fmt.Errorf("Parse duration error: %v\n", err)
 	}
 
 	fmt.Printf("Collecting feeds every %v", time_between_reqs)
@@ -19,7 +19,7 @@ func HandlerAgg(s *State, cmd Command) error {
 	for ; ; <-ticker.C {
 		err = rss.ScrapeFeeds(s.DB)
 		if err != nil {
-			fmt.Printf("Scrape error: %v\n", err)
+			return fmt.Errorf("Scrape error: %v\n", err)
 		}
 	}
 

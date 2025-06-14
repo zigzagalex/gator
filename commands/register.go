@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,9 +13,7 @@ import (
 
 func HandlerRegister(s *State, cmd Command) error {
 	if len(cmd.Args) == 0 {
-		fmt.Println("Please provide a username.")
-		os.Exit(1)
-		return nil
+		return fmt.Errorf("Usage: register <username>")
 	}
 
 	username := cmd.Args[0]
@@ -33,7 +30,6 @@ func HandlerRegister(s *State, cmd Command) error {
 	if err != nil {
 		if isUniqueViolation(err) {
 			fmt.Printf("User with name '%s' already exists.\n", username)
-			os.Exit(1)
 		}
 		return fmt.Errorf("failed to create user: %w", err)
 	}

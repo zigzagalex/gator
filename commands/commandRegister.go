@@ -32,6 +32,7 @@ func InitCommands() (Commands, error) {
 	cmdRegistry.CommandRegister("following", HandlerFollowing)
 	cmdRegistry.CommandRegister("unfollow", middlewareLoggedIn(HandlerUnfollow))
 	cmdRegistry.CommandRegister("b", middlewareLoggedIn(HandlerBrowse))
+	cmdRegistry.CommandRegister("help", HandlerHelp(&cmdRegistry))
 
 	return cmdRegistry, nil
 }

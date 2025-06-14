@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,7 +10,9 @@ import (
 )
 
 func HandlerAddFeed(s *State, cmd Command, user database.User) error {
-
+	if len(cmd.Args) < 2 {
+		return fmt.Errorf("Usage: addfeed <name> <url>")
+	}
 	feedName := cmd.Args[0]
 	feedUrl := cmd.Args[1]
 
@@ -26,9 +27,7 @@ func HandlerAddFeed(s *State, cmd Command, user database.User) error {
 
 	feed, err := s.DB.CreateFeed(context.Background(), createFeedParams)
 	if err != nil {
-		fmt.Println("Feed could not be added")
-		os.Exit(1)
-		return nil
+		return fmt.Errorf("Feed could not be added: %v\n", err)
 	}
 
 	followParams := database.CreateFeedFollowParams{
@@ -41,7 +40,7 @@ func HandlerAddFeed(s *State, cmd Command, user database.User) error {
 
 	_, err = s.DB.CreateFeedFollow(context.Background(), followParams)
 
-	fmt.Printf("Feed added and followed: %v", feed.Name)
+	fmt.Printf("Feed added and followed: %v\n", feed.Name)
 
 	return nil
 }

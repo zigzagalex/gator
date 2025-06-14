@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,11 +15,9 @@ func HandlerFollow(s *State, cmd Command, user database.User) error {
 	// Get feed
 	feed, err := s.DB.GetFeed(context.Background(), url)
 	if err != nil {
-		fmt.Println("Error getting feed info")
-		os.Exit(1)
-		return nil
+		return fmt.Errorf("Error getting feed info: %v", err)
 	}
-	
+
 	followParams := database.CreateFeedFollowParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now(),
@@ -31,9 +28,7 @@ func HandlerFollow(s *State, cmd Command, user database.User) error {
 
 	feedFollow, err := s.DB.CreateFeedFollow(context.Background(), followParams)
 	if err != nil {
-		fmt.Println("Error creating the follow for the feed")
-		os.Exit(1)
-		return nil
+		return fmt.Errorf("Error creating the follow for the feed: %v", err)
 	}
 
 	fmt.Printf("Feed %v is now followed by user %v", feedFollow[0].FeedName, feedFollow[0].UserName)

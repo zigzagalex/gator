@@ -8,18 +8,18 @@ import (
 type Model struct {
 	Q *database.Queries
 
-	users     []database.User
-	userIndex int
-	userSelected  bool
+	users        []database.User
+	userIndex    int
+	userSelected bool
 
-	feeds   []database.Feed
-	feedIndex int
+	feeds        []database.GetFeedFollowsForUserRow
+	feedIndex    int
 	feedSelected bool
 
-	posts   []database.Post
-	postIndex int
+	posts        []database.Post
+	postIndex    int
 	postSelected bool
-	
+
 	Status  string
 	Loading bool
 	Err     error

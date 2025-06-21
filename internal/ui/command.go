@@ -22,23 +22,28 @@ func fetchUsersCmd(q *database.Queries) tea.Cmd {
 	}
 }
 
-/* type feedsFetchedMsg struct{ Posts []database.Post }
+type feedsFetchedMsg struct {
+	Feeds []database.GetFeedFollowsForUserRow
+}
 
-func feedsPostsCmd(q *database.Queries, userName string) tea.Cmd {
+func fetchFollowedFeedsCmd(q *database.Queries, userName string) tea.Cmd {
 	return func() tea.Msg {
-		feeds, err := q.GetFeedFollowsForUser(context.TODO(), userName)
+		feedFollows, err := q.GetFeedFollowsForUser(context.TODO(), userName)
 		if err != nil {
 			return errorMsg{err.Error()}
 		}
-		return feedsFetchedMsg{feeds}
+		return feedsFetchedMsg{feedFollows}
 	}
-} */
+}
 
 type postsFetchedMsg struct{ Posts []database.Post }
 
-func fetchPostsCmd(q *database.Queries, userID uuid.UUID) tea.Cmd {
+func fetchPostsCmd(q *database.Queries, userId uuid.UUID, feedId uuid.UUID) tea.Cmd {
 	return func() tea.Msg {
-		posts, err := q.GetPosts(context.TODO(), userID)
+		posts, err := q.GetFeedPosts(context.TODO(), database.GetFeedPostsParams{
+			UserID: userId,
+			FeedID: feedId,
+		})
 		if err != nil {
 			return errorMsg{err.Error()}
 		}

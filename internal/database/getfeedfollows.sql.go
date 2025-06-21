@@ -18,7 +18,9 @@ SELECT
     feed_follows.id,
     feed_follows.created_at,
     users.name AS user_name,
-    feeds.name AS feed_name
+    users.id AS user_id,
+    feeds.name AS feed_name,
+    feeds.id AS feed_id
 FROM feed_follows
 LEFT JOIN users 
     ON users.id = feed_follows.user_id
@@ -31,7 +33,9 @@ type GetFeedFollowsForUserRow struct {
 	ID        uuid.UUID
 	CreatedAt time.Time
 	UserName  sql.NullString
+	UserID    uuid.NullUUID
 	FeedName  sql.NullString
+	FeedID    uuid.NullUUID
 }
 
 func (q *Queries) GetFeedFollowsForUser(ctx context.Context, name string) ([]GetFeedFollowsForUserRow, error) {
@@ -47,7 +51,9 @@ func (q *Queries) GetFeedFollowsForUser(ctx context.Context, name string) ([]Get
 			&i.ID,
 			&i.CreatedAt,
 			&i.UserName,
+			&i.UserID,
 			&i.FeedName,
+			&i.FeedID,
 		); err != nil {
 			return nil, err
 		}

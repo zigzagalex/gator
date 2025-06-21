@@ -1,4 +1,4 @@
--- name: GetPosts :many
+-- name: GetFeedPosts :many
 SELECT
     p.id,
     p.created_at,
@@ -13,6 +13,7 @@ LEFT JOIN feed_follows as ff
     ON ff.feed_id = p.feed_id
 WHERE 
     ff.user_id = $1
+    AND p.feed_id = $2
 ORDER BY 
     p.published_at DESC
 ;

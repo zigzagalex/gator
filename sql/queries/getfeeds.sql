@@ -3,6 +3,7 @@ SELECT
     feeds.created_at,
     feeds.name,
     feeds.url,
+    feeds.id,
     users.name
 FROM feeds
 LEFT JOIN users

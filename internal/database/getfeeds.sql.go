@@ -9,6 +9,8 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const getFeeds = `-- name: GetFeeds :many
@@ -16,6 +18,7 @@ SELECT
     feeds.created_at,
     feeds.name,
     feeds.url,
+    feeds.id,
     users.name
 FROM feeds
 LEFT JOIN users
@@ -28,6 +31,7 @@ type GetFeedsRow struct {
 	CreatedAt time.Time
 	Name      string
 	Url       string
+	ID        uuid.UUID
 	Name_2    sql.NullString
 }
 
@@ -44,6 +48,7 @@ func (q *Queries) GetFeeds(ctx context.Context) ([]GetFeedsRow, error) {
 			&i.CreatedAt,
 			&i.Name,
 			&i.Url,
+			&i.ID,
 			&i.Name_2,
 		); err != nil {
 			return nil, err

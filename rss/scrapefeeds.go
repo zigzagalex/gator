@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -61,7 +62,7 @@ func ScrapeFeeds(db *database.Queries) error {
 			fmt.Printf("Error creating post (%s): %v\n", item.Link, err)
 			continue
 		}
-		fmt.Printf("%v\n", post.Title)
+		log.Printf("%v\n", post.Title)
 	}
 
 	return nil

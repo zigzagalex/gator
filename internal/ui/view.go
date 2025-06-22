@@ -23,6 +23,8 @@ func (m Model) View() string {
 		return m.Status + "\n\n" + m.feedList.View()
 	case m.level == 2:
 		return m.postList.View()
+	case m.level ==3:
+		return m.allFeedList.View()
 	}
 	return "No data"
 }

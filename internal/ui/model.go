@@ -13,6 +13,7 @@ type Model struct {
 
 	userList list.Model
 	feedList list.Model
+	allFeedList list.Model
 	postList list.Model
 
 	level int // 0=user, 1=feed, 2=post
@@ -26,6 +27,7 @@ type Model struct {
 
 	users []database.User
 	feeds []database.GetFeedFollowsForUserRow
+	allFeeds []database.GetFeedsRow
 	posts []database.Post
 
 	Status  string
@@ -69,7 +71,16 @@ func (m *Model) Init() tea.Cmd {
 		cmds := m.form.updateFocus() // focus the first input
 		return tea.Batch(fetchUsersCmd(m.Q), tea.Batch(cmds...))
 	}
-
+	// All feed model
+	m.allFeedList = list.New(nil, itemDelegate{}, defaultWidth, listHeight)
+	m.allFeedList.Title = "Select a feed to follow:"
+	m.allFeedList.Styles.Title = titleStyle
+	m.allFeedList.SetShowStatusBar(false)
+	m.allFeedList.Styles.PaginationStyle = paginationStyle
+	m.allFeedList.Styles.HelpStyle = helpStyle
+	m.allFeedList.AdditionalShortHelpKeys = func() []key.Binding {
+		return []key.Binding{keys.Enter, keys.Back, keys.Quit}
+	}
 	// Post Model
 	m.postList = list.New(nil, itemDelegate{}, defaultWidth, listHeight)
 	m.postList.Title = "Select to open post in browser:"

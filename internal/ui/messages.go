@@ -57,6 +57,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.inputMode = true
 				m.textInput.Focus()
 				return m, nil
+			case "-":
+				u := m.userList.SelectedItem().(listItem).meta.(database.User)
+				return m, deleteUserCmd(m.Q, u.ID)
 			}
 
 			return m, cmd
@@ -81,6 +84,15 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.level = 99
 				cmds := m.form.updateFocus()
 				return m, tea.Batch(cmds...)
+
+			case "-":
+				selectedUser := m.userList.SelectedItem().(listItem).meta.(database.User)
+				f := m.feedList.SelectedItem().(listItem).meta.(database.GetFeedFollowsForUserRow)
+				if f.FeedID.Valid {
+					return m, unfollowFeedCmd(m.Q, selectedUser.ID, f.FeedID.UUID)
+				}
+			case "=":
+				return m, fetchAllFeedsCmd(m.Q)
 			}
 			return m, cmd
 
@@ -95,6 +107,18 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				_ = openBrowser(p.Url) // ignore error for now
 				return m, postOpenedPostCmd(m.Q, userID, p.FeedID, p.ID)
 
+			case "esc":
+				m.level = 1
+			}
+			return m, cmd
+
+		case 3:
+			m.allFeedList, cmd = m.allFeedList.Update(msg)
+			switch msg.String() {
+			case "enter":
+				f := m.allFeedList.SelectedItem().(listItem).meta.(database.GetFeedsRow)
+				selectedUser := m.userList.SelectedItem().(listItem).meta.(database.User)
+				return m, followFeedCmd(m.Q, selectedUser.ID, f.ID)
 			case "esc":
 				m.level = 1
 			}
@@ -149,7 +173,50 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Status = "Feed created successfully!"
 		selectedUser := m.userList.SelectedItem().(listItem).meta.(database.User)
 		cmd := fetchFollowedFeedsCmd(m.Q, selectedUser.Name)
-		return m, cmd	
+		return m, cmd
+
+	case allFeedsFetchedMsg:
+		if msg.Error != nil {
+			m.Status = fmt.Sprintf("Error: %v", msg.Error)
+			return m, nil
+		}
+		items := make([]list.Item, len(msg.Feeds))
+		for i, f := range msg.Feeds {
+			items[i] = listItem{title: f.Name, meta: f}
+		}
+		m.allFeedList.SetItems(items)
+		m.allFeeds = msg.Feeds
+		m.level = 3
+		return m, nil
+
+	case followFeedMsg:
+		if msg.Error != nil {
+			m.Status = fmt.Sprintf("Failed to follow feed: %v", msg.Error)
+			return m, nil
+		}
+		m.Status = "Feed followed successfully!"
+		selectedUser := m.userList.SelectedItem().(listItem).meta.(database.User)
+		m.level = 1
+		return m, fetchFollowedFeedsCmd(m.Q, selectedUser.Name)
+
+	case unfollowFeedMsg:
+		if msg.Error != nil {
+			m.Status = fmt.Sprintf("Failed to unfollow feed: %v", msg.Error)
+			return m, nil
+		}
+		m.Status = "Feed unfollowed."
+		selectedUser := m.userList.SelectedItem().(listItem).meta.(database.User)
+		m.level = 1
+		return m, fetchFollowedFeedsCmd(m.Q, selectedUser.Name)
+
+	case deleteUserMsg:
+		if msg.Error != nil {
+			m.Status = fmt.Sprintf("Failed to delete user.")
+			return m, nil
+		}
+		m.Status = "User deleted"
+		return m, fetchUsersCmd(m.Q)
 	}
+
 	return m, nil
 }

@@ -4,23 +4,25 @@ import (
 	"fmt"
 	"time"
 
+	"log"
+
 	"github.com/zigzagalex/gator/rss"
 )
 
 func HandlerAgg(s *State, cmd Command) error {
-	time_between_reqs, err := time.ParseDuration(cmd.Args[0])
+	timeBetweenReqs, err := time.ParseDuration(cmd.Args[0])
 	if err != nil {
-		return fmt.Errorf("Parse duration error: %v\n", err)
+		log.Printf("parse duration error: %v", err)
+		return fmt.Errorf("parse duration error: %w", err)
 	}
 
-	fmt.Printf("Collecting feeds every %v", time_between_reqs)
+	log.Printf("Collecting feeds every %v\n", timeBetweenReqs)
 
-	ticker := time.NewTicker(time_between_reqs)
+	ticker := time.NewTicker(timeBetweenReqs)
 	for ; ; <-ticker.C {
 		err = rss.ScrapeFeeds(s.DB)
 		if err != nil {
-			return fmt.Errorf("Scrape error: %v\n", err)
+			log.Printf("Scrape error: %v\n", err)
 		}
 	}
-
 }

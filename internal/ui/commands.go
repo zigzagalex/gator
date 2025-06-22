@@ -66,7 +66,7 @@ func postOpenedPostCmd(q *database.Queries, userId uuid.UUID, feedId uuid.UUID, 
 		if err != nil {
 			return errorMsg{err.Error()}
 		}
-		return OpenedPostMsg{nil}
+		return OpenedPostMsg{Error: nil}
 	}
 }
 
@@ -83,7 +83,7 @@ func createUsersCmd(q *database.Queries, userName string) tea.Cmd {
 		if err != nil {
 			return errorMsg{err.Error()}
 		}
-		return CreateUserMsg{nil}
+		return CreateUserMsg{Error: nil}
 	}
 }
 
@@ -112,6 +112,60 @@ func createFeedAndFollowCmd(q *database.Queries, userId uuid.UUID, feedName stri
 		if err != nil {
 			return errorMsg{err.Error()}
 		}
-		return CreateFeedAndFollowMsg{nil}
+		return CreateFeedAndFollowMsg{Error: nil}
+	}
+}
+
+type unfollowFeedMsg struct{ Error error }
+
+func unfollowFeedCmd(q *database.Queries, userId uuid.UUID, feedId uuid.UUID) tea.Cmd {
+	return func() tea.Msg {
+		err := q.DeleteFeedFollow(context.TODO(), database.DeleteFeedFollowParams{
+			UserID: userId,
+			FeedID: feedId,
+		})
+		if err != nil {
+			return errorMsg{err.Error()}
+		}
+		return unfollowFeedMsg{Error: nil}
+	}
+}
+
+type followFeedMsg struct{ Error error }
+
+func followFeedCmd(q *database.Queries, userId uuid.UUID, feedId uuid.UUID) tea.Cmd {
+	return func() tea.Msg {
+		_, err := q.CreateFeedFollow(context.TODO(), database.CreateFeedFollowParams{
+			ID:        uuid.New(),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			UserID:    userId,
+			FeedID:    feedId,
+		})
+		if err != nil {
+			return errorMsg{err.Error()}
+		}
+		return unfollowFeedMsg{Error: nil}
+	}
+}
+
+type allFeedsFetchedMsg struct {
+	Feeds []database.GetFeedsRow
+	Error error
+}
+
+func fetchAllFeedsCmd(q *database.Queries) tea.Cmd {
+	return func() tea.Msg {
+		feeds, err := q.GetFeeds(context.TODO()) // You need to implement this query
+		return allFeedsFetchedMsg{Feeds: feeds, Error: err}
+	}
+}
+
+type deleteUserMsg struct{ Error error }
+
+func deleteUserCmd(q *database.Queries, userId uuid.UUID) tea.Cmd {
+	return func() tea.Msg {
+		err := q.DeleteUser(context.TODO(), userId)
+		return deleteUserMsg{Error: err}
 	}
 }

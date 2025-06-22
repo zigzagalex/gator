@@ -1,12 +1,25 @@
 package ui
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/zigzagalex/gator/internal/database"
 )
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if m.level == 99 && m.form != nil {
+		form, cmd, done := m.form.Update(msg)
+		m.form = &form
+		if done {
+			m.form = nil
+			m.level = 1
+			return m, cmd
+		}
+		return m, cmd
+	}
+
 	switch msg := msg.(type) {
 
 	case tea.KeyMsg:
@@ -58,6 +71,16 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			case "esc":
 				m.level = 0 // go back to user list
+
+			case "+":
+				selectedUser := m.userList.SelectedItem().(listItem).meta.(database.User)
+				f := newFeedFormModel(func(name, url string) tea.Msg {
+					return createFeedAndFollowCmd(m.Q, selectedUser.ID, name, url)()
+				})
+				m.form = &f
+				m.level = 99
+				cmds := m.form.updateFocus()
+				return m, tea.Batch(cmds...)
 			}
 			return m, cmd
 
@@ -115,6 +138,18 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			return m, fetchUsersCmd(m.Q)
 		}
+
+	case CreateFeedAndFollowMsg:
+		m.level = 1
+		m.form = nil
+		if msg.Error != nil {
+			m.Status = fmt.Sprintf("Failed to create feed: %v", msg.Error)
+			return m, nil
+		}
+		m.Status = "Feed created successfully!"
+		selectedUser := m.userList.SelectedItem().(listItem).meta.(database.User)
+		cmd := fetchFollowedFeedsCmd(m.Q, selectedUser.Name)
+		return m, cmd	
 	}
 	return m, nil
 }

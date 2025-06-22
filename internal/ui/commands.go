@@ -70,19 +70,48 @@ func postOpenedPostCmd(q *database.Queries, userId uuid.UUID, feedId uuid.UUID, 
 	}
 }
 
-type CreateUserMsg struct {Error error}
+type CreateUserMsg struct{ Error error }
 
 func createUsersCmd(q *database.Queries, userName string) tea.Cmd {
-	return func () tea.Msg {
+	return func() tea.Msg {
 		_, err := q.CreateUser(context.TODO(), database.CreateUserParams{
-			ID: uuid.New(),
+			ID:        uuid.New(),
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
-			Name: userName,
+			Name:      userName,
 		})
 		if err != nil {
 			return errorMsg{err.Error()}
 		}
 		return CreateUserMsg{nil}
+	}
+}
+
+type CreateFeedAndFollowMsg struct{ Error error }
+
+func createFeedAndFollowCmd(q *database.Queries, userId uuid.UUID, feedName string, feedURL string) tea.Cmd {
+	return func() tea.Msg {
+		feed, err := q.CreateFeed(context.TODO(), database.CreateFeedParams{
+			ID:        uuid.New(),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			Name:      feedName,
+			Url:       feedURL,
+			UserID:    userId,
+		})
+		if err != nil {
+			return errorMsg{err.Error()}
+		}
+		_, err = q.CreateFeedFollow(context.TODO(), database.CreateFeedFollowParams{
+			ID:        uuid.New(),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			FeedID:    feed.ID,
+			UserID:    userId,
+		})
+		if err != nil {
+			return errorMsg{err.Error()}
+		}
+		return CreateFeedAndFollowMsg{nil}
 	}
 }

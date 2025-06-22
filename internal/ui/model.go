@@ -21,6 +21,9 @@ type Model struct {
 	inputMode bool
 	textInput textinput.Model
 
+	// Feed input form model
+	form *feedFormModel
+
 	users []database.User
 	feeds []database.GetFeedFollowsForUserRow
 	posts []database.Post
@@ -61,6 +64,11 @@ func (m *Model) Init() tea.Cmd {
 		return []key.Binding{keys.Enter, keys.Back, keys.Quit}
 	}
 	m.feedList.DisableQuitKeybindings()
+	// Add feed form model
+	if m.level == 99 && m.form != nil {
+		cmds := m.form.updateFocus() // focus the first input
+		return tea.Batch(fetchUsersCmd(m.Q), tea.Batch(cmds...))
+	}
 
 	// Post Model
 	m.postList = list.New(nil, itemDelegate{}, defaultWidth, listHeight)

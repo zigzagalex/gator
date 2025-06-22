@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/uuid"
@@ -48,5 +49,40 @@ func fetchPostsCmd(q *database.Queries, userId uuid.UUID, feedId uuid.UUID) tea.
 			return errorMsg{err.Error()}
 		}
 		return postsFetchedMsg{posts}
+	}
+}
+
+type OpenedPostMsg struct{ Error error }
+
+func postOpenedPostCmd(q *database.Queries, userId uuid.UUID, feedId uuid.UUID, postId uuid.UUID) tea.Cmd {
+	return func() tea.Msg {
+		_, err := q.CreateOpenedPost(context.TODO(), database.CreateOpenedPostParams{
+			ID:       uuid.New(),
+			OpenedAt: time.Now(),
+			UserID:   userId,
+			FeedID:   feedId,
+			PostID:   postId,
+		})
+		if err != nil {
+			return errorMsg{err.Error()}
+		}
+		return OpenedPostMsg{nil}
+	}
+}
+
+type CreateUserMsg struct {Error error}
+
+func createUsersCmd(q *database.Queries, userName string) tea.Cmd {
+	return func () tea.Msg {
+		_, err := q.CreateUser(context.TODO(), database.CreateUserParams{
+			ID: uuid.New(),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			Name: userName,
+		})
+		if err != nil {
+			return errorMsg{err.Error()}
+		}
+		return CreateUserMsg{nil}
 	}
 }

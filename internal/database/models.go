@@ -29,6 +29,14 @@ type FeedFollow struct {
 	FeedID    uuid.UUID
 }
 
+type Opened struct {
+	ID       uuid.UUID
+	OpenedAt time.Time
+	UserID   uuid.UUID
+	FeedID   uuid.UUID
+	PostID   uuid.UUID
+}
+
 type Post struct {
 	ID          uuid.UUID
 	CreatedAt   time.Time

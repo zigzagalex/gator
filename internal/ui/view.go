@@ -1,56 +1,24 @@
 package ui
 
-import (
-	"fmt"
-	"strings"
-)
+import "fmt"
 
 func (m Model) View() string {
-	var b strings.Builder
-
-	if !m.userSelected {
-		b.WriteString("Select a user:\n\n")
-		for i, user := range m.users {
-			cursor := " "
-			if i == m.userIndex {
-				cursor = ">"
-			}
-			fmt.Fprintf(&b, "%s %s\n", cursor, user.Name)
-		}
-		return b.String()
+	if m.Loading {
+		return "Loading…"
 	}
-
-	if !m.feedSelected {
-		b.WriteString("Select a feed:\n\n")
-		for i, feed := range m.feeds {
-			cursor := " "
-			if i == m.feedIndex {
-				cursor = ">"
-			}
-			fmt.Fprintf(&b, "%s %s\n", cursor, feed.FeedName.String)
-		}
-		return b.String()
+	if m.inputMode {
+		return fmt.Sprintf(
+			"\nCreate a new user:\n\n%s\n\n(enter to submit, esc to cancel)",
+			m.textInput.View(),
+		)
 	}
-
-	if m.feedSelected && !m.postSelected {
-		b.WriteString("Select a post:\n\n")
-		if len(m.posts) == 0 {
-			b.WriteString("No posts available for this feed.\n")
-		}
-		for i, post := range m.posts {
-			cursor := " "
-			if i == m.postIndex {
-				cursor = ">"
-			}
-
-			fmt.Fprintf(&b, "%s %s\n", cursor, post.Title)
-		}
-		return b.String()
+	switch m.level {
+	case 0:
+		return m.userList.View()
+	case 1:
+		return m.feedList.View()
+	case 2:
+		return m.postList.View()
 	}
-
-	// Final view after selecting feed
-	b.WriteString("✅ Feed selected:\n\n")
-	b.WriteString(fmt.Sprintf("👉 %s\n", m.Status))
-	b.WriteString("\nPress q to quit.\n")
-	return b.String()
+	return "No data"
 }

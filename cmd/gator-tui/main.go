@@ -41,8 +41,8 @@ func main() {
 	}
 }
 
-func NewUI(q *database.Queries) ui.Model {
-	return ui.Model{
+func NewUI(q *database.Queries) *ui.Model {
+	return &ui.Model{
 		Q:       q,
 		Loading: true,
 	}

@@ -54,6 +54,7 @@ Alternative for the brave: if you trust my executable script and have a mac runn
 - Use docker for installation, to make the setup experience better
 
 ## Resources and further Links
-[1] Bubbletea is fun
-[2] Miniflux open source RSS reader ([review] https://ofeng.org/posts/best-self-host-rss-reader/) by Feng (also a cool blog to follow)
+[1] [Bubbletea](https://github.com/charmbracelet/bubbletea?tab=readme-ov-file) is fun and checkout their [bubbles](https://github.com/charmbracelet/bubbles) which are components you can add on to your TUI. 
+
+[2] Miniflux open source RSS reader [review](https://ofeng.org/posts/best-self-host-rss-reader/) by Feng (also a cool blog to follow).
 

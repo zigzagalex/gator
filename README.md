@@ -14,6 +14,10 @@ The posts can then be opened to be read in the default browser.
 
 
 
+https://github.com/user-attachments/assets/130e2f52-554f-491a-87bb-5dd29c85d76f
+
+
+
 ## How to install
 1. Make sure you have PostgreSQL (>=15.0) and Go installed.
 

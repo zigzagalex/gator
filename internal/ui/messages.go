@@ -50,11 +50,29 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		switch m.level {
 		case 0: // user list active
+			prevFiltering := m.userList.FilterState() == list.Filtering
 			m.userList, cmd = m.userList.Update(msg)
+			nowFiltering := m.userList.FilterState() == list.Filtering
+
+			// Still filtering: block everything
+			if nowFiltering {
+				return m, cmd
+			}
+
+			// Just finished filtering with a key that wasn't enter → early return
+			if prevFiltering && !nowFiltering && msg.String() != "enter" {
+				return m, cmd
+			}
+
 			switch msg.String() {
 			case "enter":
-				u := m.userList.SelectedItem().(listItem).meta.(database.User)
+				selectedItem, ok := getFilteredSelectedItem(m.userList)
+				if !ok {
+					return m, nil
+				}
+				u := selectedItem.(listItem).meta.(database.User)
 				return m, fetchFollowedFeedsCmd(m.Q, u.Name)
+
 			case "+": // add user
 				m.inputMode = true
 				m.textInput.Focus()
@@ -69,10 +87,24 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, cmd
 
 		case 1: // feed list active
+			prevFiltering := m.feedList.FilterState() == list.Filtering
 			m.feedList, cmd = m.feedList.Update(msg)
+			nowFiltering := m.feedList.FilterState() == list.Filtering
+
+			if nowFiltering {
+				return m, cmd
+			}
+			if prevFiltering && !nowFiltering && msg.String() != "enter" {
+				return m, cmd
+			}
+
 			switch msg.String() {
 			case "enter":
-				f := m.feedList.SelectedItem().(listItem).meta.(database.GetFeedFollowsForUserRow)
+				selectedItem, ok := getFilteredSelectedItem(m.feedList)
+				if !ok {
+					return m, nil
+				}
+				f := selectedItem.(listItem).meta.(database.GetFeedFollowsForUserRow)
 				selectedUser := m.userList.SelectedItem().(listItem).meta.(database.User)
 				if f.FeedID.Valid {
 					cmdPosts := fetchPostsCmd(m.Q, f.UserID.UUID, f.FeedID.UUID)
@@ -105,18 +137,30 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, cmd
 
 		case 2: // post list active
+			prevFiltering := m.postList.FilterState() == list.Filtering
 			m.postList, cmd = m.postList.Update(msg)
+			nowFiltering := m.postList.FilterState() == list.Filtering
+
+			if nowFiltering {
+				return m, cmd
+			}
+			if prevFiltering && !nowFiltering && msg.String() != "enter" {
+				return m, cmd
+			}
+
 			switch msg.String() {
 			case "enter":
-				p := m.postList.SelectedItem().(listItem).meta.(database.Post)
-				// Extract user ID from the currently selected user
+				selectedItem, ok := getFilteredSelectedItem(m.postList)
+				if !ok {
+					return m, nil
+				}
+				p := selectedItem.(listItem).meta.(database.Post)
 				selectedUser := m.userList.SelectedItem().(listItem).meta.(database.User)
 				userID := selectedUser.ID
-				_ = openBrowser(p.Url) // ignore error for now
+				_ = openBrowser(p.Url)
 				cmdLog := postOpenedPostCmd(m.Q, userID, p.FeedID, p.ID)
 				cmdRef := fetchOpenedPostsCmd(m.Q, userID)
 				return m, tea.Batch(cmdLog, cmdRef)
-
 			case "esc":
 				m.level = 1 // return to user level
 				selectedUser := m.userList.SelectedItem().(listItem).meta.(database.User)
@@ -126,13 +170,16 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case 3: // posts list active
 			m.allFeedList, cmd = m.allFeedList.Update(msg)
+			if m.allFeedList.FilterState() == list.Filtering {
+				return m, cmd // Enter will be used to apply/cancel filter
+			}
 			switch msg.String() {
 			case "enter":
 				f := m.allFeedList.SelectedItem().(listItem).meta.(database.GetFeedsRow)
 				selectedUser := m.userList.SelectedItem().(listItem).meta.(database.User)
 				return m, followFeedCmd(m.Q, selectedUser.ID, f.ID)
 			case "esc":
-				m.level = 1
+				m.level = 0
 			}
 			return m, cmd
 		}
@@ -274,6 +321,5 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	}
-
 	return m, nil
 }

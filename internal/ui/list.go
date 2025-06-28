@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -26,19 +27,20 @@ type keyMap struct {
 }
 
 func newKeyMap() keyMap {
-    km := keyMap{
-        Up:     key.NewBinding(key.WithKeys("up", "k"),   key.WithHelp("↑/k", "up")),
-        Down:   key.NewBinding(key.WithKeys("down", "j"), key.WithHelp("↓/j", "down")),
-        Enter:  key.NewBinding(key.WithKeys("enter"),     key.WithHelp("enter", "select")),
-        Back:   key.NewBinding(key.WithKeys("esc"),       key.WithHelp("esc", "back")),
-        Add:    key.NewBinding(key.WithKeys("+"),         key.WithHelp("+", "add")),
-        Del:    key.NewBinding(key.WithKeys("-"),         key.WithHelp("-", "delete")),
-        Follow: key.NewBinding(key.WithKeys("="),         key.WithHelp("=", "follow")),
-        Quit:   key.NewBinding(key.WithKeys("q"),         key.WithHelp("q", "quit")),
-        Help:   key.NewBinding(key.WithKeys("?"),         key.WithHelp("?", "help")),
-    }
-    return km
+	km := keyMap{
+		Up:     key.NewBinding(key.WithKeys("up", "k"), key.WithHelp("↑/k", "up")),
+		Down:   key.NewBinding(key.WithKeys("down", "j"), key.WithHelp("↓/j", "down")),
+		Enter:  key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "select")),
+		Back:   key.NewBinding(key.WithKeys("esc"), key.WithHelp("esc", "back")),
+		Add:    key.NewBinding(key.WithKeys("+"), key.WithHelp("+", "add")),
+		Del:    key.NewBinding(key.WithKeys("-"), key.WithHelp("-", "delete")),
+		Follow: key.NewBinding(key.WithKeys("="), key.WithHelp("=", "follow")),
+		Quit:   key.NewBinding(key.WithKeys("q"), key.WithHelp("q", "quit")),
+		Help:   key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "help")),
+	}
+	return km
 }
+
 var (
 	titleStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#FFFDF5")).
@@ -63,7 +65,7 @@ type listItem struct {
 
 func (i listItem) Title() string       { return i.title }
 func (i listItem) Description() string { return "" }
-func (i listItem) FilterValue() string { return "" }
+func (i listItem) FilterValue() string { return i.title }
 
 type itemDelegate struct{}
 
@@ -85,4 +87,33 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, itm list.Item
 	}
 
 	fmt.Fprint(w, style.Render(prefix+li.title))
+}
+
+func getFilteredSelectedItem(l list.Model) (list.Item, bool) {
+	filter := l.FilterInput.Value()
+	items := l.Items()
+
+	if filter == "" {
+		if len(items) == 0 {
+			return nil, false
+		}
+		return items[l.Index()], true
+	}
+
+	// Mimic Bubble's filter
+	matches := make([]list.Item, 0)
+	for _, item := range items {
+		if strings.Contains(strings.ToLower(item.FilterValue()), strings.ToLower(filter)) {
+			matches = append(matches, item)
+		}
+	}
+
+	if len(matches) == 0 {
+		return nil, false
+	}
+	i := l.Index()
+	if i >= len(matches) {
+		i = 0
+	}
+	return matches[i], true
 }

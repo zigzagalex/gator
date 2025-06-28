@@ -106,6 +106,13 @@ func (m *Model) Init() tea.Cmd {
 	}
 	m.postList.DisableQuitKeybindings()
 
+	// Filtering
+	m.userList.SetFilteringEnabled(true)
+	m.feedList.SetFilteringEnabled(true)
+	m.allFeedList.SetFilteringEnabled(true)
+	m.postList.SetFilteringEnabled(true)
+
+
 	// Opened Posts
 	m.opened = make(map[uuid.UUID]bool)
 

@@ -1,4 +1,4 @@
-# Gator a CLI/TUI RSS feed aggregator using Go.
+# Gator a CLI/TUI RSS feed aggregator using Go
 
 This is a personal project to learn:
 1. How to integrate a Go application with a PostgeSQL database.
@@ -10,7 +10,7 @@ This is a personal project to learn:
 ## The why and the what
 This is a simple REPL CLI/TUI that allows for users to follow and fetch RSS feeds. All in the terminal, because honestly is there a better UI than a terminal?
 
-The posts can then be opened to be read in the default browser. 
+The posts can then be opened to be read in the default browser. Opened posts are greyed out, so you can see what you haven't read yet. 
 
 
 
@@ -49,6 +49,11 @@ Alternative for the brave: if you trust my executable script and have a mac runn
 
 ## What could be improved?
 - Improve the filtering/search, since the bubbletea version is unintuitive (or I just don't get it yet)
+- Make good user communication (e.g. when feed is added, unfollowed etc.)
 - Add an HTTP API (and authentication/authorization) that allows other users to interact with the service remotely
 - Use docker for installation, to make the setup experience better
+
+## Resources and further Links
+[1] Bubbletea is fun
+[2] Miniflux open source RSS reader ([review] https://ofeng.org/posts/best-self-host-rss-reader/) by Feng (also a cool blog to follow)
 

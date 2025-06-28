@@ -18,9 +18,9 @@ func (m Model) View() string {
 	}
 	switch {
 	case m.level == 0:
-		return m.userList.View() + "\n" + m.Status
+		return m.userList.View()
 	case m.level == 1:
-		return m.feedList.View() + "\n\n" + m.Status
+		return m.feedList.View()
 	case m.level == 2:
 		return m.postList.View()
 	case m.level == 3:

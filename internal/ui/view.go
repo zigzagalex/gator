@@ -13,17 +13,17 @@ func (m Model) View() string {
 		)
 	}
 
-	if m.level == 99 && m.form != nil{
+	if m.level == 99 && m.form != nil {
 		return m.form.View()
 	}
-	switch  {
+	switch {
 	case m.level == 0:
-		return m.userList.View()
+		return m.userList.View() + "\n" + m.Status
 	case m.level == 1:
-		return m.Status + "\n\n" + m.feedList.View()
+		return m.feedList.View() + "\n\n" + m.Status
 	case m.level == 2:
 		return m.postList.View()
-	case m.level ==3:
+	case m.level == 3:
 		return m.allFeedList.View()
 	}
 	return "No data"

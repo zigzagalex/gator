@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -8,6 +9,7 @@ import (
 	"github.com/zigzagalex/gator/internal/database"
 )
 
+// Update function that changes the state of the model depending on the recieved messages
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.level == 99 && m.form != nil {
 		form, cmd, done := m.form.Update(msg)
@@ -53,13 +55,15 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "enter":
 				u := m.userList.SelectedItem().(listItem).meta.(database.User)
 				return m, fetchFollowedFeedsCmd(m.Q, u.Name)
-			case "+":
+			case "+": // add user
 				m.inputMode = true
 				m.textInput.Focus()
 				return m, nil
-			case "-":
+			case "-": // delete user
 				u := m.userList.SelectedItem().(listItem).meta.(database.User)
 				return m, deleteUserCmd(m.Q, u.ID)
+			case "esc":
+				return m, tea.Quit
 			}
 
 			return m, cmd
@@ -69,13 +73,17 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.String() {
 			case "enter":
 				f := m.feedList.SelectedItem().(listItem).meta.(database.GetFeedFollowsForUserRow)
+				selectedUser := m.userList.SelectedItem().(listItem).meta.(database.User)
 				if f.FeedID.Valid {
-					return m, fetchPostsCmd(m.Q, f.UserID.UUID, f.FeedID.UUID)
+					cmdPosts := fetchPostsCmd(m.Q, f.UserID.UUID, f.FeedID.UUID)
+					cmdOpened := fetchOpenedPostsCmd(m.Q, selectedUser.ID)
+					return m, tea.Batch(cmdPosts, cmdOpened)
 				}
+
 			case "esc":
 				m.level = 0 // go back to user list
 
-			case "+":
+			case "+": // add feed by activating form for Feedname and URL
 				selectedUser := m.userList.SelectedItem().(listItem).meta.(database.User)
 				f := newFeedFormModel(func(name, url string) tea.Msg {
 					return createFeedAndFollowCmd(m.Q, selectedUser.ID, name, url)()
@@ -85,13 +93,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmds := m.form.updateFocus()
 				return m, tea.Batch(cmds...)
 
-			case "-":
+			case "-": // unfollow the selected feed
 				selectedUser := m.userList.SelectedItem().(listItem).meta.(database.User)
 				f := m.feedList.SelectedItem().(listItem).meta.(database.GetFeedFollowsForUserRow)
 				if f.FeedID.Valid {
 					return m, unfollowFeedCmd(m.Q, selectedUser.ID, f.FeedID.UUID)
 				}
-			case "=":
+			case "=": // follow feeds that already exist on the database
 				return m, fetchAllFeedsCmd(m.Q)
 			}
 			return m, cmd
@@ -105,14 +113,18 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				selectedUser := m.userList.SelectedItem().(listItem).meta.(database.User)
 				userID := selectedUser.ID
 				_ = openBrowser(p.Url) // ignore error for now
-				return m, postOpenedPostCmd(m.Q, userID, p.FeedID, p.ID)
+				cmdLog := postOpenedPostCmd(m.Q, userID, p.FeedID, p.ID)
+				cmdRef := fetchOpenedPostsCmd(m.Q, userID)
+				return m, tea.Batch(cmdLog, cmdRef)
 
 			case "esc":
-				m.level = 1
+				m.level = 1 // return to user level
+				selectedUser := m.userList.SelectedItem().(listItem).meta.(database.User)
+				return m, fetchFollowedFeedsCmd(m.Q, selectedUser.Name)
 			}
 			return m, cmd
 
-		case 3:
+		case 3: // posts list active
 			m.allFeedList, cmd = m.allFeedList.Update(msg)
 			switch msg.String() {
 			case "enter":
@@ -137,9 +149,26 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case feedsFetchedMsg:
+		selectedUser := m.userList.SelectedItem().(listItem).meta.(database.User)
+
 		items := make([]list.Item, len(msg.Feeds))
 		for i, f := range msg.Feeds {
-			items[i] = listItem{title: f.FeedName.String, meta: f}
+			title := f.FeedName.String
+
+			if f.FeedID.Valid {
+				unreadCount, err := m.Q.GetUnreadCount(context.TODO(), database.GetUnreadCountParams{
+					UserID: selectedUser.ID,
+					FeedID: f.FeedID.UUID,
+				})
+				if err == nil && unreadCount > 0 {
+					title += fmt.Sprintf(" [%d unread]", unreadCount)
+				}
+			}
+
+			items[i] = listItem{
+				title: title,
+				meta:  f,
+			}
 		}
 		m.feedList.SetItems(items)
 		m.feeds = msg.Feeds
@@ -149,7 +178,11 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case postsFetchedMsg:
 		items := make([]list.Item, len(msg.Posts))
 		for i, p := range msg.Posts {
-			items[i] = listItem{title: p.Title, meta: p}
+			items[i] = listItem{
+				title:  p.Title,
+				meta:   p,
+				opened: m.opened[p.ID],
+			}
 		}
 		m.postList.SetItems(items)
 		m.posts = msg.Posts
@@ -216,6 +249,30 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.Status = "User deleted"
 		return m, fetchUsersCmd(m.Q)
+
+	case OpenedPostMsg:
+		selectedUser := m.userList.SelectedItem().(listItem).meta.(database.User)
+		return m, fetchOpenedPostsCmd(m.Q, selectedUser.ID)
+
+	case openedFetchedMsg:
+		if msg.Err != nil {
+			m.Status = "Error: " + msg.Err.Error()
+			return m, nil
+		}
+		m.opened = msg.Map
+
+		if m.level == 2 && len(m.posts) > 0 {
+			items := make([]list.Item, len(m.posts))
+			for i, p := range m.posts {
+				items[i] = listItem{
+					title:  p.Title,
+					meta:   p,
+					opened: m.opened[p.ID], // ← refreshed flag
+				}
+			}
+			m.postList.SetItems(items)
+		}
+		return m, nil
 	}
 
 	return m, nil

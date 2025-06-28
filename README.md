@@ -1,5 +1,5 @@
 # gator
-A CLI RSS feed aggregator using Go.
+A CLI/TUI RSS feed aggregator using Go.
 
 This is a personal project to learn:
 1. How to integrate a Go application with a PostgeSQL database.
@@ -9,7 +9,11 @@ This is a personal project to learn:
 
 
 ## The why and the what
-This is a simple REPL CLI that allows for users to follow and fetch RSS feeds. The posts can then be browsed, all in the terminal, because honestly is there a better UI than a terminal?
+This is a simple REPL CLI/TUI that allows for users to follow and fetch RSS feeds. All in the terminal, because honestly is there a better UI than a terminal?
+
+The posts can then be opened to be read in the default browser. 
+
+VIDEO
 
 ## How to install
 1. Make sure you have PostgreSQL (>=15.0) and Go installed.
@@ -27,15 +31,20 @@ and set the db_url to your database url, so that gator can connect to it. You ca
 
 4. Run migrations, by running ```goose -dir ./gator/sql/schema postgres "<db_url>" up``` where you replace the db_url with your actual link. 
 
-5. Run gator ```./gator``` and type ```help``` to see the commands. 
+5. Run gator ```./gator-tui``` the commands are explained on the bottom. 
 
 
 Alternative for the brave: if you trust my executable script and have a mac running MacOS run ```chmod +x scripts/setup_db.sh``` out of the root of the project and then run ```./scripts/setup_db.sh ```. It should do steps 1-4 for you. 
 
+## Commands
+* Arrows for up, down, next/prev page
+* (enter) for selection
+* (esc) for going back/closing the CLI/TUI
+* (+) for adding new user/feed
+* (-) for deleting user/unfollowing feed
+* (=) for following feed stored in the database
+
 ## What could be improved?
-- Add a search command that allows for fuzzy searching of posts
-- Add read/unread for posts
-- Add a TUI that allows you to select a post in the terminal and view it in a more readable format in the browser
 - Add an HTTP API (and authentication/authorization) that allows other users to interact with the service remotely
-- Write a service manager that keeps the agg command running in the background and restarts it if it crashes
+- Use docker for installation, to make the setup experience better
 

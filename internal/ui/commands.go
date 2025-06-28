@@ -169,3 +169,23 @@ func deleteUserCmd(q *database.Queries, userId uuid.UUID) tea.Cmd {
 		return deleteUserMsg{Error: err}
 	}
 }
+
+type openedFetchedMsg struct {
+	Map map[uuid.UUID]bool
+	Err error
+}
+
+func fetchOpenedPostsCmd(q *database.Queries, userID uuid.UUID) tea.Cmd {
+	return func() tea.Msg {
+		rows, err := q.GetOpenedPost(context.TODO(), userID)
+		if err != nil {
+			return openedFetchedMsg{Err: err}
+		}
+
+		m := make(map[uuid.UUID]bool, len(rows))
+		for _, r := range rows {
+			m[r.PostID] = true
+		}
+		return openedFetchedMsg{Map: m}
+	}
+}

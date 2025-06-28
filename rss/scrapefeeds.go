@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -51,7 +50,7 @@ func ScrapeFeeds(db *database.Queries) error {
 			FeedID:      feed.ID,
 		}
 
-		post, err := db.CreatePost(ctx, post_param)
+		_, err = db.CreatePost(ctx, post_param)
 		if err != nil {
 			// Check for "duplicate key" error (PostgreSQL code 23505)
 			if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
@@ -62,8 +61,6 @@ func ScrapeFeeds(db *database.Queries) error {
 			fmt.Printf("Error creating post (%s): %v\n", item.Link, err)
 			continue
 		}
-		log.Printf("%v\n", post.Title)
 	}
-
 	return nil
 }

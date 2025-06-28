@@ -5,16 +5,17 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/google/uuid"
 	"github.com/zigzagalex/gator/internal/database"
 )
 
 type Model struct {
 	Q *database.Queries
 
-	userList list.Model
-	feedList list.Model
+	userList    list.Model
+	feedList    list.Model
 	allFeedList list.Model
-	postList list.Model
+	postList    list.Model
 
 	level int // 0=user, 1=feed, 2=post
 
@@ -25,10 +26,13 @@ type Model struct {
 	// Feed input form model
 	form *feedFormModel
 
-	users []database.User
-	feeds []database.GetFeedFollowsForUserRow
+	users    []database.User
+	feeds    []database.GetFeedFollowsForUserRow
 	allFeeds []database.GetFeedsRow
-	posts []database.Post
+	posts    []database.Post
+
+	// Opened posts
+	opened map[uuid.UUID]bool
 
 	Status  string
 	Loading bool
@@ -54,6 +58,10 @@ func (m *Model) Init() tea.Cmd {
 	ti.Focus()
 	m.textInput = ti
 	m.inputMode = false
+	// Functions
+	m.userList.AdditionalShortHelpKeys = func() []key.Binding {
+		return []key.Binding{keys.Add, keys.Del}
+	}
 
 	// Feed Model
 	m.feedList = list.New(nil, itemDelegate{}, defaultWidth, listHeight)
@@ -66,6 +74,11 @@ func (m *Model) Init() tea.Cmd {
 		return []key.Binding{keys.Enter, keys.Back, keys.Quit}
 	}
 	m.feedList.DisableQuitKeybindings()
+	// User functions
+	m.feedList.AdditionalShortHelpKeys = func() []key.Binding {
+		return []key.Binding{keys.Add, keys.Del, keys.Follow}
+	}
+
 	// Add feed form model
 	if m.level == 99 && m.form != nil {
 		cmds := m.form.updateFocus() // focus the first input
@@ -92,6 +105,9 @@ func (m *Model) Init() tea.Cmd {
 		return []key.Binding{keys.Enter, keys.Back, keys.Quit}
 	}
 	m.postList.DisableQuitKeybindings()
+
+	// Opened Posts
+	m.opened = make(map[uuid.UUID]bool)
 
 	return fetchUsersCmd(m.Q)
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/zigzagalex/gator/commands"
 	"github.com/zigzagalex/gator/internal/config"
 	"github.com/zigzagalex/gator/internal/database"
+	"github.com/zigzagalex/gator/internal/setup"
 	"github.com/zigzagalex/gator/internal/ui"
 )
 
@@ -46,11 +47,17 @@ func main() {
 			}
 		}()
 
-		err := commands.HandlerAgg(state, commands.Command{Args: []string{"5m"}})
+		err := commands.HandlerAgg(state, commands.Command{Args: []string{"15s"}})
 		if err != nil {
 			fmt.Printf("Background scraper crashed: %v\n", err)
 		}
 	}()
+	
+	// Setup first or default user
+	_, err = setup.EnsureInitialUser(dbQueries)
+	if err != nil {
+		log.Fatalf("user setup failed: %v", err)
+	}
 
 	// Start UI
 	m := NewUI(dbQueries)
